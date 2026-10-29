@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyomo-conic"
+version = "0.1.0"
+description = "A lightweight Python extension providing native SDP and SOCP conic modeling in Pyomo with CBF export."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Iago Fernandez", email = "iagofernandezperlo@gmail.com" }
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "pyomo>=6.10.0",
+    "numpy>=2.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/iago-fernandez/pyomo-conic"
+Repository = "https://github.com/iago-fernandez/pyomo-conic.git"
+Issues = "https://github.com/iago-fernandez/pyomo-conic/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pyomo_conic*"]
