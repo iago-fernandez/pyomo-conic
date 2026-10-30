@@ -62,7 +62,9 @@ def export_cbf_files(
         if sym.startswith("v") and sym[1:].isdigit():
             idx = int(sym[1:])
             obj = raw_obj() if isinstance(raw_obj, weakref.ReferenceType) else raw_obj
-            var_name = obj.name
+            if obj is None:
+                continue
+            var_name = str(getattr(obj, "name", f"v{idx}"))
             var_dict[idx] = var_name
             obj_to_idx[obj] = idx
             name_to_idx[var_name] = idx
@@ -78,10 +80,12 @@ def export_cbf_files(
         actual_v = v() if isinstance(v, weakref.ReferenceType) else v
         if actual_v in obj_to_idx:
             return obj_to_idx[actual_v]
-        if hasattr(actual_v, "name") and actual_v.name in name_to_idx:
-            return name_to_idx[actual_v.name]
-        if str(actual_v) in name_to_idx:
-            return name_to_idx[str(actual_v)]
+        v_name = getattr(actual_v, "name", None)
+        if isinstance(v_name, str) and v_name in name_to_idx:
+            return name_to_idx[v_name]
+        str_v = str(actual_v)
+        if str_v in name_to_idx:
+            return name_to_idx[str_v]
         raise KeyError(f"Variable {actual_v} not found in exported problem variables.")
 
     with open(cbf_path, "w", encoding="utf-8") as f_cbf:

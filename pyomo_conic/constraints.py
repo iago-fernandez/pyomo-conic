@@ -53,7 +53,7 @@ class SOCPConstraint:
     Second-order cone constraint defining affine vector membership in Q^dim.
 
     Stores linear coefficients A and affine shift b such that b + Ax in Q^dim,
-    representing the Euclidean norm upper-bound constraint y_0 >= ||y_{1..dim-1}||_2.
+    representing the Euclidean norm upper-bound constraint y_0 >= ||y_{1, ..., dim-1}||_2.
     """
 
     def __init__(self, dim: int, name: Optional[str] = None):
@@ -96,14 +96,17 @@ class ConicContainer:
 
 def get_conic_container(model: pyo.ConcreteModel) -> ConicContainer:
     """Retrieves or initializes the conic constraint container on a Pyomo model."""
-    if hasattr(model, "_pyomo_conic"):
-        return model._pyomo_conic
-    if hasattr(model, "_raposa_conic"):
-        return model._raposa_conic
-    container = ConicContainer()
-    model._pyomo_conic = container
-    model._raposa_conic = container
-    return container
+    container = getattr(model, "_pyomo_conic", None)
+    if isinstance(container, ConicContainer):
+        return container
+
+    raposa_container = getattr(model, "_raposa_conic", None)
+    if isinstance(raposa_container, ConicContainer):
+        return raposa_container
+
+    new_container = ConicContainer()
+    setattr(model, "_pyomo_conic", new_container)
+    return new_container
 
 
 def add_sdp_constraint(
@@ -157,7 +160,7 @@ def add_socp_cone(
     """
     Attaches a Second-Order Cone constraint in vector format: expr_list in Q^dim.
 
-    The first entry represents the upper-bound coordinate y_0 >= ||y_{1..dim-1}||_2.
+    The first entry represents the upper-bound coordinate y_0 >= ||y_{1, ..., dim-1}||_2.
     """
     dim = len(expr_list)
     if dim < 2:
