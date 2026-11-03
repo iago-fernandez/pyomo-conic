@@ -5,6 +5,7 @@ A Python extension for **Pyomo** that adds support for **Semidefinite Programmin
 The library automatically decomposes affine expressions into constant and variable coefficient matrices, exporting synchronized problem files in **MOSEK Conic Benchmark Format (CBF)** alongside AMPL `.nl` bytecode and column index mappings.
 
 [![Status](https://img.shields.io/badge/status-stable-green?style=flat-square)](https://github.com/iago-fernandez/pyomo-conic/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/iago-fernandez/pyomo-conic/ci.yml?branch=main&label=CI&style=flat-square)](https://github.com/iago-fernandez/pyomo-conic/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue?style=flat-square)](requirements.txt)
 [![Modeling](https://img.shields.io/badge/modeling-Pyomo%206.10%2B-yellow?style=flat-square)](https://www.pyomo.org/)
 [![Format](https://img.shields.io/badge/format-CBF%20%7C%20AMPL-lightgrey?style=flat-square)](https://docs.mosek.com/latest/cbf/index.html)
