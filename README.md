@@ -113,6 +113,30 @@ Calling `export_cbf_files(model, "prefix")` generates three synchronized files:
    * `CON`: Defines quadratic cones (`Q`) and affine coordinates (`ACOORD`, `BCOORD`).
    * `SCALARCORR`: Explicit mapping from CBF scalar variable indices to `.nl` column names.
 
+### Exporter Configuration
+
+The `export_cbf_files` function provides configurable options for solver targeting and file generation:
+
+```python
+from pyomo_conic import export_cbf_files
+
+result = export_cbf_files(
+    model,
+    prefix_path="output/problem",
+    export_nl=True,              # Set to False to skip AMPL bytecode generation
+    export_col=True,             # Set to False to skip column mapping file
+    tolerance=1e-12,             # Numerical threshold for filtering small values
+    verbose=True,                # Print model summary and generated files to stdout
+    symbolic_solver_labels=True  # Keyword arguments are forwarded to Pyomo writer
+)
+
+# Access paths via named attributes or tuple unpacking:
+nl_path, col_path, cbf_path = result
+print(result.cbf)  # "/abs/path/output/problem.cbf"
+print(result.nl)   # "/abs/path/output/problem.nl" (or None if export_nl=False)
+print(result.col)  # "/abs/path/output/problem.col" (or None if export_col=False)
+```
+
 ## Implementation Details
 
 * **Single-pass traversal:** Uses Pyomo's `generate_standard_repn` to extract affine terms in $O(N)$ time without numerical differentiation.
@@ -139,7 +163,7 @@ pyomo-conic/
 └── README.md                 # Project documentation
 ```
 
-## Installation & Setup
+## Installation and Setup
 
 ### Prerequisites
 
@@ -170,7 +194,7 @@ The test suite validates affine matrix decomposition, coordinate mapping, bounda
 pytest
 ```
 
-## Research & Attribution
+## Research and Attribution
 
 This library was developed as part of research engineering on [RAPOSa](https://raposa.usc.es), a global optimization solver for continuous polynomial programming.
 

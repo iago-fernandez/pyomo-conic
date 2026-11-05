@@ -27,22 +27,29 @@ class SDPConstraint:
         self.D_entries: dict[tuple[int, int], float] = {}
         self.H_entries: ComponentMap = ComponentMap()
 
-    def set_d_entry(self, row: int, col: int, val: float):
+    def set_d_entry(self, row: int, col: int, val: float, tolerance: float = 1e-12):
         """Sets a constant coefficient normalized to the lower triangle."""
         if col > row:
             row, col = col, row
-        if abs(val) > 1e-12:
+        if abs(val) > tolerance:
             self.D_entries[(row, col)] = val
         elif (row, col) in self.D_entries:
             del self.D_entries[(row, col)]
 
-    def set_h_entry(self, var_obj: Any, row: int, col: int, val: float):
+    def set_h_entry(
+        self,
+        var_obj: Any,
+        row: int,
+        col: int,
+        val: float,
+        tolerance: float = 1e-12
+    ):
         """Sets a variable coefficient normalized to the lower triangle."""
         if col > row:
             row, col = col, row
         if var_obj not in self.H_entries:
             self.H_entries[var_obj] = {}
-        if abs(val) > 1e-12:
+        if abs(val) > tolerance:
             self.H_entries[var_obj][(row, col)] = val
         elif (row, col) in self.H_entries[var_obj]:
             del self.H_entries[var_obj][(row, col)]
@@ -62,16 +69,22 @@ class SOCPConstraint:
         self.b_entries: dict[int, float] = {}
         self.A_entries: list[tuple[int, Any, float]] = []
 
-    def set_b_entry(self, row: int, val: float):
+    def set_b_entry(self, row: int, val: float, tolerance: float = 1e-12):
         """Sets an affine constant shift in a designated coordinate row."""
-        if abs(val) > 1e-12:
+        if abs(val) > tolerance:
             self.b_entries[row] = val
         elif row in self.b_entries:
             del self.b_entries[row]
 
-    def add_a_entry(self, row: int, var_obj: Any, val: float):
+    def add_a_entry(
+        self,
+        row: int,
+        var_obj: Any,
+        val: float,
+        tolerance: float = 1e-12
+    ):
         """Appends a linear variable coefficient to a designated coordinate row."""
-        if abs(val) > 1e-12:
+        if abs(val) > tolerance:
             self.A_entries.append((row, var_obj, val))
 
 
@@ -109,10 +122,24 @@ def get_conic_container(model: pyo.ConcreteModel) -> ConicContainer:
     return new_container
 
 
+def get_conic_summary(model: pyo.ConcreteModel) -> dict[str, Any]:
+    """Returns a structured summary of conic constraints registered on the model."""
+    container = get_conic_container(model)
+    return {
+        "num_variables": len(container.get_all_variables()),
+        "num_sdp_constraints": len(container.sdp_constraints),
+        "sdp_dimensions": [sdp.dim for sdp in container.sdp_constraints],
+        "num_socp_constraints": len(container.socp_constraints),
+        "socp_dimensions": [socp.dim for socp in container.socp_constraints],
+    }
+
+
 def add_sdp_constraint(
     model: pyo.ConcreteModel,
     matrix: list[list[Any]],
-    name: Optional[str] = None
+    name: Optional[str] = None,
+    *,
+    tolerance: float = 1e-12
 ) -> SDPConstraint:
     """
     Attaches a Linear Matrix Inequality (LMI) constraint to the model.
@@ -139,13 +166,13 @@ def add_sdp_constraint(
                     f"Entry ({r}, {c}) in SDP matrix must be affine or linear, got: {expr}"
                 )
 
-            if repn.constant is not None and abs(repn.constant) > 1e-12:
-                sdp.set_d_entry(r, c, float(repn.constant))
+            if repn.constant is not None and abs(repn.constant) > tolerance:
+                sdp.set_d_entry(r, c, float(repn.constant), tolerance=tolerance)
 
             if repn.linear_vars:
                 for var, coef in zip(repn.linear_vars, repn.linear_coefs):
-                    if abs(coef) > 1e-12:
-                        sdp.set_h_entry(var, r, c, float(coef))
+                    if abs(coef) > tolerance:
+                        sdp.set_h_entry(var, r, c, float(coef), tolerance=tolerance)
 
     container = get_conic_container(model)
     container.sdp_constraints.append(sdp)
@@ -155,7 +182,9 @@ def add_sdp_constraint(
 def add_socp_cone(
     model: pyo.ConcreteModel,
     expr_list: list[Any],
-    name: Optional[str] = None
+    name: Optional[str] = None,
+    *,
+    tolerance: float = 1e-12
 ) -> SOCPConstraint:
     """
     Attaches a Second-Order Cone constraint in vector format: expr_list in Q^dim.
@@ -175,13 +204,13 @@ def add_socp_cone(
                 f"SOCP component {i} must be affine or linear, got: {expr}"
             )
 
-        if repn.constant is not None and abs(repn.constant) > 1e-12:
-            socp.set_b_entry(i, float(repn.constant))
+        if repn.constant is not None and abs(repn.constant) > tolerance:
+            socp.set_b_entry(i, float(repn.constant), tolerance=tolerance)
 
         if repn.linear_vars:
             for var, coef in zip(repn.linear_vars, repn.linear_coefs):
-                if abs(coef) > 1e-12:
-                    socp.add_a_entry(i, var, float(coef))
+                if abs(coef) > tolerance:
+                    socp.add_a_entry(i, var, float(coef), tolerance=tolerance)
 
     container = get_conic_container(model)
     container.socp_constraints.append(socp)
@@ -192,7 +221,9 @@ def add_socp_constraint(
     model: pyo.ConcreteModel,
     y0_expr: Any,
     y_rest_exprs: list[Any],
-    name: Optional[str] = None
+    name: Optional[str] = None,
+    *,
+    tolerance: float = 1e-12
 ) -> SOCPConstraint:
     """
     Attaches a Second-Order Cone constraint specified by norm components.
@@ -200,4 +231,4 @@ def add_socp_constraint(
     Enforces y0_expr >= sqrt(sum(y_rest_exprs^2)) via vector cone representation.
     """
     full_list = [y0_expr] + list(y_rest_exprs)
-    return add_socp_cone(model, full_list, name=name)
+    return add_socp_cone(model, full_list, name=name, tolerance=tolerance)

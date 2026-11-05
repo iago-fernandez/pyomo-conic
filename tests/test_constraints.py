@@ -9,6 +9,7 @@ from pyomo_conic.constraints import (
     add_socp_cone,
     add_socp_constraint,
     get_conic_container,
+    get_conic_summary,
 )
 
 
@@ -133,3 +134,29 @@ def test_conic_container_variable_extraction():
     assert model.x1 in vars_set
     assert model.x2 in vars_set
     assert model.x3 in vars_set
+
+
+def test_conic_summary():
+    model = pyo.ConcreteModel()
+    model.x1 = pyo.Var()
+    model.x2 = pyo.Var()
+
+    add_sdp_constraint(model, [[model.x1, 0.0], [0.0, 2.0]])
+    add_socp_cone(model, [model.x2, model.x1])
+
+    summary = get_conic_summary(model)
+    assert summary["num_variables"] == 2
+    assert summary["num_sdp_constraints"] == 1
+    assert summary["sdp_dimensions"] == [2]
+    assert summary["num_socp_constraints"] == 1
+    assert summary["socp_dimensions"] == [2]
+
+
+def test_constraint_custom_tolerance():
+    model = pyo.ConcreteModel()
+    model.x = pyo.Var()
+
+    # With tolerance 1e-4, the 1e-6 coefficient should be filtered out
+    sdp = add_sdp_constraint(model, [[1e-6 * model.x + 1e-6, 0.0], [0.0, 1.0]], tolerance=1e-4)
+    assert (0, 0) not in sdp.D_entries
+    assert model.x not in sdp.H_entries
