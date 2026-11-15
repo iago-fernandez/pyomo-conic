@@ -18,7 +18,7 @@ from .constraints import (
 )
 from .exporter import ExportResult, export_cbf_files, export_raposa_files
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 __all__ = [
     "ConicContainer",
