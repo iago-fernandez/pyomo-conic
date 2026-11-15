@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyomo-conic"
-version = "0.1.0"
+version = "1.0.0"
 description = "A lightweight Python extension providing native SDP and SOCP conic modeling in Pyomo with CBF export."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -23,7 +23,7 @@ keywords = [
     "raposa",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Mathematics",
     "Programming Language :: Python :: 3",

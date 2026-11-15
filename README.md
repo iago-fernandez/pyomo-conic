@@ -171,7 +171,23 @@ pyomo-conic/
 * **Pyomo 6.10+**
 * **NumPy 2.5+**
 
-### Quick Start
+### Installation via Pip
+
+Install directly from GitHub into any Python environment:
+
+```bash
+pip install git+https://github.com/iago-fernandez/pyomo-conic.git
+```
+
+Or install from PyPI:
+
+```bash
+pip install pyomo-conic
+```
+
+### Local Development Setup
+
+To contribute or run tests locally:
 
 ```bash
 # Clone the repository
